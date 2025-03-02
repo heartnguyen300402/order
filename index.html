@@ -1,34 +1,115 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Phở</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 500px; margin: auto; }
-        .menu-item { display: flex; flex-direction: column; padding: 10px; border-bottom: 1px solid #ccc; }
-        .menu-item span { font-weight: bold; }
-        .order { margin-top: 20px; padding: 10px; border-top: 2px solid black; }
-        .table-buttons, .quantity-buttons { margin-top: 10px; }
-        .table-buttons button, .quantity-buttons button { margin: 2px; }
-        .note { width: 100%; margin-top: 5px; }
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Order Phở</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap');
+    
+            body { 
+                font-family: Arial, sans-serif; 
+                max-width: 500px; 
+                margin: auto; 
+                background-color: #fff8e1; /* Màu nền nhẹ nhàng */
+            }
+    
+            h1 {
+                text-align: center;
+                color: #8B4513; /* Màu nâu đậm giống nước dùng phở */
+            }
+    
+            .order-title {
+                font-family: 'Merriweather', serif; /* Font chữ sang trọng phù hợp với ẩm thực */
+                font-size: 28px;
+                font-weight: bold;
+                color: #8B4513; /* Màu nâu ấm */
+                text-transform: capitalize; /* Viết hoa chữ cái đầu */
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Đổ bóng nhẹ */
+                padding: 10px 0;
+                border-bottom: 3px solid #8B4513; /* Gạch chân làm nổi bật */
+                text-align: center;
+            }
+    
+            .menu-item { 
+                display: flex; 
+                flex-direction: column; 
+                padding: 10px; 
+                border-bottom: 1px solid #ccc; 
+            }
+    
+            .menu-item span { 
+                font-weight: bold; 
+            }
+    
+            .order { 
+                margin-top: 20px; 
+                padding: 10px; 
+                border-top: 2px solid black; 
+            }
+    
+            .table-buttons, .quantity-buttons { 
+                margin-top: 10px; 
+            }
+    
+            .table-buttons button, .quantity-buttons button { 
+                margin: 2px; 
+                background-color: #8B4513; /* Nút màu nâu ấm */
+                color: white; 
+                border: none; 
+                padding: 5px 10px; 
+                border-radius: 5px;
+                cursor: pointer;
+            }
+    
+            .table-buttons button:hover, .quantity-buttons button:hover {
+                background-color: #a0522d; /* Màu sáng hơn khi hover */
+            }
+    
+            .note { 
+                width: 100%; 
+                margin-top: 5px; 
+            }
+        </style>
+    </head>
 <body>
-    <h1>Đặt món Phở</h1>
+    <h1>Order Phở</h1>
+    <h1 class="order-title">I. Đặt đơn</h1>
     <div id="menu"></div>
-    <textarea id="orderNote" class="note" placeholder="Ghi chú cho đơn hàng..."></textarea>
+    <textarea id="orderNote" class="note" placeholder="Chú thích..."></textarea>
     <p id="selectedTable">Bàn: Không có bàn</p>
     <div class="table-buttons" id="tableButtons"></div>
     <button id="placeOrderButton" onclick="placeOrder()">Đặt món</button>
-    <h2>Danh sách đơn</h2>
+    <h1 class="order-title">II. Danh sách đơn</h1>
     <div id="orders"></div>
 
     <script>
         const menu = [
-            { name: "Tái gầu", quantity: 0, note: "", customPrice: "" },
+            { name: "Tái", quantity: 0, note: "", customPrice: "" },
+            { name: "Chín", quantity: 0, note: "", customPrice: "" },
+            { name: "Nạm", quantity: 0, note: "", customPrice: "" },
+            { name: "Gầu", quantity: 0, note: "", customPrice: "" },
+            { name: "Sốt vang", quantity: 0, note: "", customPrice: "" },
             { name: "Bắp", quantity: 0, note: "", customPrice: "" },
-            { name: "Sốt vang", quantity: 0, note: "", customPrice: "" }
+            { name: "Lõi", quantity: 0, note: "", customPrice: "" },
+            { name: "Tái Chín", quantity: 0, note: "", customPrice: "" },
+            { name: "Tái Nạm", quantity: 0, note: "", customPrice: "" },
+            { name: "Tái Gầu", quantity: 0, note: "", customPrice: "" },
+            { name: "Tái Sốt", quantity: 0, note: "", customPrice: "" },
+            { name: "Tái Bắp", quantity: 0, note: "", customPrice: "" },
+            { name: "Tái Lõi", quantity: 0, note: "", customPrice: "" },
+            { name: "Chín Nạm", quantity: 0, note: "", customPrice: "" },
+            { name: "Chín Gầu", quantity: 0, note: "", customPrice: "" },
+            { name: "Chín Sốt", quantity: 0, note: "", customPrice: "" },
+            { name: "Chín Bắp", quantity: 0, note: "", customPrice: "" },
+            { name: "Chín Lõi", quantity: 0, note: "", customPrice: "" },
+            { name: "Nạm Gầu", quantity: 0, note: "", customPrice: "" },
+            { name: "Nạm Sốt", quantity: 0, note: "", customPrice: "" },
+            { name: "Nạm Bắp", quantity: 0, note: "", customPrice: "" },
+            { name: "Nạm Lõi", quantity: 0, note: "", customPrice: "" },
+            { name: "Gầu Sốt", quantity: 0, note: "", customPrice: "" },
+            { name: "Gầu Bắp", quantity: 0, note: "", customPrice: "" },
+            { name: "Gầu Lõi", quantity: 0, note: "", customPrice: "" }
         ];
         let orders = [];
         let selectedTable = null;
@@ -69,8 +150,7 @@
                                 <option value="Nhiều hành">Nhiều hành</option>
                                 <option value="Rau mùi">Rau mùi</option>
                                 <option value="custom">Giá: nhập giá khác</option>
-                                <option value="other">Ghi chú khác</option>
-                            </select>
+                                </select>
                             <input type="text" id="customPrice${index}" placeholder="Nhập giá" style="display:none;" onchange="setCustomPrice(${index}, this.value)">
                         </div>
                     </div>`;
@@ -127,9 +207,21 @@
                 orderDiv.className = "order";
                 orderDiv.innerHTML = `<strong>Đơn #${orders.length - index}</strong> - Bàn ${order.table}`;
                 order.items.forEach(item => {
-                    orderDiv.innerHTML += `<p>${item.name} x ${item.quantity} (${item.note || "Không có ghi chú"})</p>`;
+                    if (item.note){
+                        orderDiv.innerHTML += `<p>${item.name} x ${item.quantity} (${item.note})</p>`;
+                    }
+                    else {
+                    orderDiv.innerHTML += `<p>${item.name} x ${item.quantity}</p>`;
+                    }
+                    // orderDiv.innerHTML += `<p>${item.name} x ${item.quantity} (${item.note || "Không có ghi chú"})</p>`;
                 });
-                orderDiv.innerHTML += `<p><strong>Ghi chú đơn:</strong> ${order.note || "Không có ghi chú"}</p>`;
+                if (order.note){
+                    orderDiv.innerHTML += `<p><strong>Ghi chú đơn:</strong> ${order.note}</p>`;
+                }
+                else {
+                    orderDiv.innerHTML += `<p><strong>Ghi chú đơn:</strong></p>`;
+                }
+                // orderDiv.innerHTML += `<p><strong>Ghi chú đơn:</strong> ${order.note || "Không có ghi chú"}</p>`;
                 orderDiv.innerHTML += `<button onclick="editOrder(${index})">Chỉnh sửa</button>`;
                 ordersDiv.appendChild(orderDiv);
             });
