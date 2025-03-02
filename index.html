@@ -9,9 +9,7 @@
         .menu-item { display: flex; flex-direction: column; padding: 10px; border-bottom: 1px solid #ccc; }
         .menu-item span { font-weight: bold; }
         .order { margin-top: 20px; padding: 10px; border-top: 2px solid black; }
-        .done { background: #ddd; }
         .table-buttons, .quantity-buttons { margin-top: 10px; }
-        .table-buttons span, .quantity-buttons span { font-weight: bold; display: block; margin-bottom: 5px; }
         .table-buttons button, .quantity-buttons button { margin: 2px; }
         .note { width: 100%; margin-top: 5px; }
     </style>
@@ -20,10 +18,9 @@
     <h1>Đặt món Phở</h1>
     <div id="menu"></div>
     <textarea id="orderNote" class="note" placeholder="Ghi chú cho đơn hàng..."></textarea>
-    <div class="table-buttons" id="tableButtons">
-        <span>Bàn:</span>
-    </div>
-    <button onclick="placeOrder()">Đặt món</button>
+    <p id="selectedTable">Bàn: Không có bàn</p>
+    <div class="table-buttons" id="tableButtons"></div>
+    <button id="placeOrderButton" onclick="placeOrder()">Đặt món</button>
     <h2>Danh sách đơn</h2>
     <div id="orders"></div>
 
@@ -35,27 +32,33 @@
         ];
         let orders = [];
         let selectedTable = null;
+        let editingOrderIndex = null;
 
         function createTableButtons() {
             const tableDiv = document.getElementById("tableButtons");
             for (let i = 1; i <= 26; i++) {
                 const btn = document.createElement("button");
                 btn.innerText = i;
-                btn.onclick = () => { selectedTable = i; alert("Chọn bàn: " + i); };
+                btn.onclick = () => { 
+                    selectedTable = i; 
+                    updateSelectedTable(); 
+                };
                 tableDiv.appendChild(btn);
             }
         }
 
+        function updateSelectedTable() {
+            document.getElementById("selectedTable").innerText = "Bàn: " + (selectedTable || "Không có bàn");
+        }
+
         function updateMenu() {
             const menuDiv = document.getElementById("menu");
-            menuDiv.innerHTML = "<div><strong>Tên món | Ghi chú</strong></div>";
+            menuDiv.innerHTML = "<div><strong>Tên món</strong></div>";
             menu.forEach((item, index) => {
                 menuDiv.innerHTML += `
                     <div class="menu-item">
                         <span>${item.name}</span>
-                        <div class="quantity-buttons" id="quantityButtons${index}">
-                            <span>Số lượng:</span>
-                        </div>
+                        <div class="quantity-buttons" id="quantityButtons${index}"></div>
                         <div>
                             <span>Ghi chú:</span>
                             <select onchange="setNote(${index}, this.value)">
@@ -94,27 +97,24 @@
 
         function setNote(index, value) {
             menu[index].note = value;
-            if (value === "custom") {
-                document.getElementById(`customPrice${index}`).style.display = "block";
-            } else {
-                document.getElementById(`customPrice${index}`).style.display = "none";
-                menu[index].customPrice = "";
-            }
-        }
-
-        function setCustomPrice(index, value) {
-            menu[index].customPrice = value;
         }
 
         function placeOrder() {
             const orderItems = menu.filter(item => item.quantity > 0);
             if (orderItems.length === 0) return alert("Chưa chọn món nào!");
             const orderNote = document.getElementById("orderNote").value;
-            const newOrder = { id: Date.now(), table: selectedTable || "Không có bàn", items: JSON.parse(JSON.stringify(orderItems)), done: false, note: orderNote };
-            orders.unshift(newOrder);
-            if (orders.length > 100) orders.pop();
-            menu.forEach(item => { item.quantity = 0; item.note = ""; item.customPrice = ""; });
+
+            if (editingOrderIndex !== null) {
+                orders[editingOrderIndex] = { id: orders[editingOrderIndex].id, table: selectedTable || "Không có bàn", items: JSON.parse(JSON.stringify(orderItems)), note: orderNote };
+                editingOrderIndex = null;
+            } else {
+                const newOrder = { id: Date.now(), table: selectedTable || "Không có bàn", items: JSON.parse(JSON.stringify(orderItems)), note: orderNote };
+                orders.unshift(newOrder);
+            }
+            
+            menu.forEach(item => { item.quantity = 0; item.note = ""; });
             document.getElementById("orderNote").value = "";
+            document.getElementById("placeOrderButton").innerText = "Đặt món";
             updateMenu();
             updateOrders();
         }
@@ -123,19 +123,33 @@
             const ordersDiv = document.getElementById("orders");
             ordersDiv.innerHTML = "";
             orders.forEach((order, index) => {
-                ordersDiv.innerHTML += `
-                    <div class="order ${order.done ? 'done' : ''}">
-                        <p><strong>Đơn #${orders.length - index} - Bàn ${order.table}</strong></p>
-                        <ul>${order.items.map(item => `<li>${item.name} x ${item.quantity}${item.note ? ` (${item.note})` : ""}${item.customPrice ? ` - Giá: ${item.customPrice}` : ""}</li>`).join('')}</ul>
-                        <p><strong>Ghi chú đơn:</strong> ${order.note}</p>
-                        ${!order.done ? `<button onclick="markDone(${order.id})">Hoàn thành</button> <button onclick="editOrder(${order.id})">Chỉnh sửa</button>` : ''}
-                    </div>`;
+                const orderDiv = document.createElement("div");
+                orderDiv.className = "order";
+                orderDiv.innerHTML = `<strong>Đơn #${orders.length - index}</strong> - Bàn ${order.table}`;
+                order.items.forEach(item => {
+                    orderDiv.innerHTML += `<p>${item.name} x ${item.quantity} (${item.note || "Không có ghi chú"})</p>`;
+                });
+                orderDiv.innerHTML += `<p><strong>Ghi chú đơn:</strong> ${order.note || "Không có ghi chú"}</p>`;
+                orderDiv.innerHTML += `<button onclick="editOrder(${index})">Chỉnh sửa</button>`;
+                ordersDiv.appendChild(orderDiv);
             });
         }
 
-        function markDone(id) {
-            orders = orders.map(order => order.id === id ? { ...order, done: true } : order);
-            updateOrders();
+        function editOrder(index) {
+            const order = orders[index];
+            selectedTable = order.table;
+            updateSelectedTable();
+            order.items.forEach(item => {
+                const menuItem = menu.find(m => m.name === item.name);
+                if (menuItem) {
+                    menuItem.quantity = item.quantity;
+                    menuItem.note = item.note;
+                }
+            });
+            document.getElementById("orderNote").value = order.note;
+            editingOrderIndex = index;
+            document.getElementById("placeOrderButton").innerText = "Cập nhật đơn";
+            updateMenu();
         }
 
         createTableButtons();
