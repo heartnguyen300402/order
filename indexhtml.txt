@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phở Restaurant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        let order = {};
+        let orderCount = 0;
+        let orderHistory = [];
+        let editingOrderId = null;
+
+        function updateQuantity(item, change) {
+            const quantityElement = document.getElementById(`qty-${item}`);
+            let quantity = parseInt(quantityElement.textContent) + change;
+            if (quantity < 0) quantity = 0;
+            quantityElement.textContent = quantity;
+            order[item] = quantity > 0 ? quantity : undefined;
+        }
+
+        function placeOrder() {
+            const orderItems = Object.entries(order).filter(([_, qty]) => qty);
+            if (orderItems.length === 0) {
+                alert("Bạn chưa chọn món nào!");
+                return;
+            }
+
+            if (editingOrderId !== null) {
+                let orderIndex = orderHistory.findIndex(o => o.id === editingOrderId);
+                orderHistory[orderIndex] = { id: editingOrderId, details: formatOrderDetails(orderItems), items: { ...order } };
+                alert(`Đơn hàng #${editingOrderId} đã được cập nhật!`);
+                editingOrderId = null;
+            } else {
+                orderCount++;
+                orderHistory.push({ id: orderCount, details: formatOrderDetails(orderItems), items: { ...order } });
+                alert(`Đơn hàng #${orderCount} đã được đặt!`);
+            }
+
+            renderOrderHistory();
+            resetOrder();
+        }
+
+        function formatOrderDetails(orderItems) {
+            return orderItems.map(([item, qty]) => `${item}: ${qty}`).join(", ");
+        }
+
+        function resetOrder() {
+            for (let item in order) {
+                document.getElementById(`qty-${item}`).textContent = "0";
+            }
+            order = {};
+        }
+
+        function renderOrderHistory() {
+            const historyList = document.getElementById("order-history");
+            historyList.innerHTML = "";
+            orderHistory.forEach(order => {
+                historyList.innerHTML += `<p>Đơn hàng #${order.id}: ${order.details} 
+                    <button onclick="editOrder(${order.id})" class='ml-2 bg-blue-500 text-white px-2 py-1 rounded'>Chỉnh sửa</button>
+                </p>`;
+            });
+        }
+
+        function editOrder(orderId) {
+            const selectedOrder = orderHistory.find(o => o.id === orderId);
+            if (!selectedOrder) return;
+
+            order = { ...selectedOrder.items };
+            for (let item in order) {
+                document.getElementById(`qty-${item}`).textContent = order[item];
+            }
+            editingOrderId = orderId;
+            alert(`Bạn đang chỉnh sửa đơn hàng #${orderId}. Hãy cập nhật số lượng và đặt lại.`);
+        }
+    </script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold text-amber-700 mb-4">Phở Restaurant</h1>
+        
+        <h2 class="text-2xl font-semibold mb-3">Menu</h2>
+        <div class="grid grid-cols-3 gap-4">
+            <div class="border rounded-lg p-4 shadow-md">
+                <img src="images/pho_tai.jpg" alt="Phở Tái" class="w-full h-40 object-cover mb-2">
+                <h3 class="text-lg font-bold">Phở Tái</h3>
+                <p>$12.00</p>
+                <div class="flex items-center mt-2">
+                    <button onclick="updateQuantity('Pho Tai', -1)" class="px-3 py-1 bg-gray-300 rounded">-</button>
+                    <span id="qty-Pho Tai" class="px-3">0</span>
+                    <button onclick="updateQuantity('Pho Tai', 1)" class="px-3 py-1 bg-gray-300 rounded">+</button>
+                </div>
+            </div>
+            <div class="border rounded-lg p-4 shadow-md">
+                <img src="images/pho_ga.jpg" alt="Phở Gà" class="w-full h-40 object-cover mb-2">
+                <h3 class="text-lg font-bold">Phở Gà</h3>
+                <p>$11.00</p>
+                <div class="flex items-center mt-2">
+                    <button onclick="updateQuantity('Pho Ga', -1)" class="px-3 py-1 bg-gray-300 rounded">-</button>
+                    <span id="qty-Pho Ga" class="px-3">0</span>
+                    <button onclick="updateQuantity('Pho Ga', 1)" class="px-3 py-1 bg-gray-300 rounded">+</button>
+                </div>
+            </div>
+            <div class="border rounded-lg p-4 shadow-md">
+                <img src="images/pho_dac_biet.jpg" alt="Phở Đặc Biệt" class="w-full h-40 object-cover mb-2">
+                <h3 class="text-lg font-bold">Phở Đặc Biệt</h3>
+                <p>$14.00</p>
+                <div class="flex items-center mt-2">
+                    <button onclick="updateQuantity('Pho Dac Biet', -1)" class="px-3 py-1 bg-gray-300 rounded">-</button>
+                    <span id="qty-Pho Dac Biet" class="px-3">0</span>
+                    <button onclick="updateQuantity('Pho Dac Biet', 1)" class="px-3 py-1 bg-gray-300 rounded">+</button>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="placeOrder()" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Đặt Đơn</button>
+        
+        <h2 class="text-2xl font-semibold mt-6">Lịch sử đơn hàng</h2>
+        <div class="mt-2" id="order-history"></div>
+    </div>
+</body>
+</html>
